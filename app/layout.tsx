@@ -16,8 +16,8 @@ const jetbrainsMono = JetBrains_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "OptiWeb - Optimizador de imágenes WebP y AVIF",
-  description: "Optimiza tus imágenes para la web con WebP y AVIF para mejorar el rendimiento de tu sitio web",
+  title: "Squeeze - Optimizador de recursos web",
+  description: "Optimiza tus imágenes y fuentes para la web mejorando el rendimiento de tu sitio web",
   themeColor: "#0f172a",
 };
 

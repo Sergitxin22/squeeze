@@ -17,7 +17,7 @@ export default function Header({ currentPage }: HeaderProps) {
                         </svg>
                     </div>
                     <div>
-                        <h1 className="text-2xl font-bold text-white tracking-tight">OptiWeb</h1>
+                        <h1 className="text-2xl font-bold text-white tracking-tight">Squeeze</h1>
                         <p className="text-slate-400 text-sm mt-1">
                         </p>
                     </div>

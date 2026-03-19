@@ -1,6 +1,6 @@
-# OptiWeb - Optimizador de imágenes y fuentes web
+# Squeeze - Optimizador de imágenes y fuentes web
 
-OptiWeb es una aplicación web que permite a los usuarios optimizar recursos web para mejorar el rendimiento de sus sitios. Similar a [Squoosh.app](https://squoosh.app) para imágenes, esta herramienta ayuda a reducir significativamente el tamaño de imágenes y fuentes sin comprometer la calidad visual.
+Squeeze es una aplicación web que permite a los usuarios optimizar recursos web para mejorar el rendimiento de sus sitios. Similar a [Squoosh.app](https://squoosh.app) para imágenes, esta herramienta ayuda a reducir significativamente el tamaño de imágenes y fuentes sin comprometer la calidad visual.
 
 ## Características
 
@@ -41,8 +41,8 @@ OptiWeb es una aplicación web que permite a los usuarios optimizar recursos web
 
 1. Clona este repositorio:
 ```bash
-git clone https://github.com/tuusuario/image-optimizer.git
-cd image-optimizer
+git clone https://github.com/tuusuario/squeeze.git
+cd squeeze
 ```
 
 2. Instala las dependencias:
@@ -78,7 +78,7 @@ yarn dev
 2. Ingresa el nombre exacto de la fuente de Google Fonts que deseas optimizar.
 3. Haz clic en "Optimizar y Descargar".
 4. Descarga los archivos de fuente optimizados en diferentes formatos.
-# OptiWeb — Optimizador de imágenes y fuentes web
+# Squeeze — Optimizador de imágenes y fuentes web
 
 Aplicación Next.js que permite optimizar imágenes (WebP / AVIF) y descargar fuentes optimizadas desde Google Fonts.
 
