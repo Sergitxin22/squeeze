@@ -5,18 +5,16 @@ import Dropzone from './Dropzone';
 import OptimizationControls from './OptimizationControls';
 import ImageComparison from './ImageComparison';
 
-// Función para descargar la imagen
-const downloadImage = (dataUrl: string, fileName: string) => {
-    const link = document.createElement('a');
-    link.href = dataUrl;
-    link.download = fileName;
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+type BatchSummary = {
+    totalCount: number;
+    processedCount: number;
+    failedCount: number;
+    zipFilename: string;
 };
 
 const ImageOptimizer: React.FC = () => {
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
+    const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+    const [mode, setMode] = useState<'single' | 'batch'>('single');
     const [originalImageUrl, setOriginalImageUrl] = useState<string | null>(null);
     const [optimizedImageUrl, setOptimizedImageUrl] = useState<string | null>(null);
     const [webpImageUrl, setWebpImageUrl] = useState<string | null>(null);
@@ -43,6 +41,8 @@ const ImageOptimizer: React.FC = () => {
         size: number;
         savings: string;
     } | null>(null);
+    const [batchSummary, setBatchSummary] = useState<BatchSummary | null>(null);
+    const [batchZipBlob, setBatchZipBlob] = useState<Blob | null>(null);
 
     // Limpiar URLs al desmontar el componente
     useEffect(() => {
@@ -53,13 +53,31 @@ const ImageOptimizer: React.FC = () => {
         };
     }, [originalImageUrl]);
 
-    const handleImageSelected = (file: File) => {
+    const downloadBlob = (blob: Blob, fileName: string) => {
+        const blobUrl = URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = blobUrl;
+        link.download = fileName;
+        document.body.appendChild(link);
+        link.click();
+        document.body.removeChild(link);
+        URL.revokeObjectURL(blobUrl);
+    };
+
+    const handleImagesSelected = (files: File[]) => {
+        if (!files.length) {
+            return;
+        }
+
+        const firstFile = files[0];
+
         // Limpiar la URL anterior si existe para evitar memory leaks
         if (originalImageUrl) {
             URL.revokeObjectURL(originalImageUrl);
         }
 
-        setSelectedFile(file);
+        setSelectedFiles(files);
+        setMode(files.length > 1 ? 'batch' : 'single');
         setOptimizedImageUrl(null);
         setWebpImageUrl(null);
         setAvifImageUrl(null);
@@ -67,13 +85,15 @@ const ImageOptimizer: React.FC = () => {
         setWebpStats(null);
         setAvifStats(null);
         setImageDimensions(null);
+        setBatchSummary(null);
+        setBatchZipBlob(null);
 
         // Crear URL para la imagen original
-        const objectUrl = URL.createObjectURL(file);
+        const objectUrl = URL.createObjectURL(firstFile);
         setOriginalImageUrl(objectUrl);
 
         // Establecer nombre del archivo
-        setOriginalFilename((file as any).name?.split('.').slice(0, -1).join('.') || 'imagen');
+        setOriginalFilename(firstFile.name?.split('.').slice(0, -1).join('.') || 'imagen');
 
         // Extraer dimensiones de la imagen
         const img = new Image();
@@ -123,7 +143,14 @@ const ImageOptimizer: React.FC = () => {
     };
 
     const handleOptimize = async () => {
-        if (!selectedFile) return;
+        if (!selectedFiles.length) return;
+
+        if (mode === 'batch') {
+            await handleOptimizeBatch();
+            return;
+        }
+
+        const selectedFile = selectedFiles[0];
 
         setIsProcessing(true);
 
@@ -209,6 +236,56 @@ const ImageOptimizer: React.FC = () => {
         }
     };
 
+    const handleOptimizeBatch = async () => {
+        if (!selectedFiles.length) return;
+
+        setIsProcessing(true);
+        setBatchSummary(null);
+        setBatchZipBlob(null);
+
+        try {
+            const formData = new FormData();
+            selectedFiles.forEach((file) => {
+                formData.append('files', file);
+            });
+            formData.append('format', format);
+            formData.append('webpQuality', webpQuality.toString());
+            formData.append('avifQuality', avifQuality.toString());
+
+            const response = await fetch('/api/optimize-batch', {
+                method: 'POST',
+                body: formData,
+            });
+
+            if (!response.ok) {
+                throw new Error('Error al optimizar el lote de imagenes');
+            }
+
+            const processedCount = parseInt(response.headers.get('x-processed-count') || '0', 10);
+            const totalCount = parseInt(response.headers.get('x-total-count') || String(selectedFiles.length), 10);
+            const failedCount = parseInt(response.headers.get('x-failed-count') || '0', 10);
+            const disposition = response.headers.get('content-disposition') || '';
+            const match = disposition.match(/filename="(.+)"/);
+            const zipFilename = match?.[1] || `imagenes-optimizadas-${Date.now()}.zip`;
+
+            const zipBlob = await response.blob();
+            setBatchZipBlob(zipBlob);
+            setBatchSummary({
+                totalCount,
+                processedCount,
+                failedCount,
+                zipFilename,
+            });
+
+            downloadBlob(zipBlob, zipFilename);
+        } catch (error) {
+            console.error('Error al optimizar el lote:', error);
+            alert('Ha ocurrido un error al optimizar el lote de imagenes. Intentalo de nuevo.');
+        } finally {
+            setIsProcessing(false);
+        }
+    };
+
     return (
         <div className="space-y-8">
             {/* Instrucciones */}
@@ -222,8 +299,8 @@ const ImageOptimizer: React.FC = () => {
                     Optimiza tus imágenes para la web
                 </h2>
                 <p className="mt-2 text-slate-400 text-lg">
-                    Sube una imagen, selecciona la calidad y obtén versiones
-                    optimizadas en WebP y AVIF para mejorar el rendimiento de tu sitio.
+                    Sube una o hasta 100 imagenes de golpe, selecciona calidad y descarga
+                    todas optimizadas en WebP y AVIF para mejorar el rendimiento de tu sitio.
                 </p>
                 {/* <div className="mt-4 inline-flex items-center text-sm px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
                     <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 mr-1.5 text-indigo-400">
@@ -234,7 +311,26 @@ const ImageOptimizer: React.FC = () => {
             </div>
 
             {/* Área de arrastrar y soltar */}
-            <Dropzone onImageSelected={handleImageSelected} />
+            <Dropzone onImagesSelected={handleImagesSelected} />
+
+            {selectedFiles.length > 1 && (
+                <div className="w-full max-w-xl mx-auto flex rounded-lg overflow-hidden border border-slate-700 bg-slate-900">
+                    <button
+                        onClick={() => setMode('single')}
+                        className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${mode === 'single' ? 'bg-indigo-600 text-white' : 'text-slate-300 hover:bg-slate-800'
+                            }`}
+                    >
+                        Modo individual (primera imagen)
+                    </button>
+                    <button
+                        onClick={() => setMode('batch')}
+                        className={`flex-1 px-4 py-2 text-sm font-medium transition-colors ${mode === 'batch' ? 'bg-emerald-600 text-white' : 'text-slate-300 hover:bg-slate-800'
+                            }`}
+                    >
+                        Modo lote ({selectedFiles.length} imagenes)
+                    </button>
+                </div>
+            )}
 
             {/* Controles de optimización */}
             {originalImageUrl && (
@@ -242,28 +338,64 @@ const ImageOptimizer: React.FC = () => {
                     format={format}
                     webpQuality={webpQuality}
                     avifQuality={avifQuality}
+                    mode={mode}
+                    selectedCount={selectedFiles.length}
                     onFormatChange={handleFormatChange}
                     onWebpQualityChange={handleWebpQualityChange}
                     onAvifQualityChange={handleAvifQualityChange}
                     onOptimize={handleOptimize}
                     isProcessing={isProcessing}
-                    isImageSelected={!!selectedFile}
+                    isImageSelected={selectedFiles.length > 0}
                 />
             )}
 
+            {mode === 'batch' && batchSummary && (
+                <div className="w-full max-w-4xl mx-auto bg-slate-900 border border-slate-800 rounded-xl p-6">
+                    <h3 className="text-lg font-semibold text-white mb-4">Resultado del lote</h3>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-5">
+                        <div className="rounded-lg bg-slate-800 border border-slate-700 p-3">
+                            <p className="text-xs text-slate-400">Enviadas</p>
+                            <p className="text-xl font-semibold text-white">{batchSummary.totalCount}</p>
+                        </div>
+                        <div className="rounded-lg bg-emerald-950/30 border border-emerald-900/50 p-3">
+                            <p className="text-xs text-emerald-300">Procesadas</p>
+                            <p className="text-xl font-semibold text-emerald-200">{batchSummary.processedCount}</p>
+                        </div>
+                        <div className="rounded-lg bg-rose-950/30 border border-rose-900/50 p-3">
+                            <p className="text-xs text-rose-300">Fallidas</p>
+                            <p className="text-xl font-semibold text-rose-200">{batchSummary.failedCount}</p>
+                        </div>
+                    </div>
+
+                    <button
+                        onClick={() => {
+                            if (batchZipBlob) {
+                                downloadBlob(batchZipBlob, batchSummary.zipFilename);
+                            }
+                        }}
+                        disabled={!batchZipBlob}
+                        className="w-full sm:w-auto px-5 py-3 bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white rounded-lg text-sm font-medium transition-all"
+                    >
+                        Descargar ZIP nuevamente
+                    </button>
+                </div>
+            )}
+
             {/* Comparación de imágenes */}
-            <ImageComparison
-                originalImage={originalImageUrl}
-                optimizedImage={optimizedImageUrl}
-                stats={stats}
-                format={format === 'both' ? 'webp' : format}
-                webpImageUrl={webpImageUrl}
-                avifImageUrl={avifImageUrl}
-                webpStats={webpStats}
-                avifStats={avifStats}
-                originalFilename={originalFilename}
-                imageDimensions={imageDimensions}
-            />
+            {mode === 'single' && (
+                <ImageComparison
+                    originalImage={originalImageUrl}
+                    optimizedImage={optimizedImageUrl}
+                    stats={stats}
+                    format={format === 'both' ? 'webp' : format}
+                    webpImageUrl={webpImageUrl}
+                    avifImageUrl={avifImageUrl}
+                    webpStats={webpStats}
+                    avifStats={avifStats}
+                    originalFilename={originalFilename}
+                    imageDimensions={imageDimensions}
+                />
+            )}
         </div>
     );
 };

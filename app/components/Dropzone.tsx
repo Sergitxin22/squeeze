@@ -6,36 +6,40 @@ import { PhotoIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
 
 interface DropzoneProps {
-    onImageSelected: (file: File) => void;
+    onImagesSelected: (files: File[]) => void;
 }
 
-const Dropzone: React.FC<DropzoneProps> = ({ onImageSelected }) => {
-    const [preview, setPreview] = useState<string | null>(null);
+const Dropzone: React.FC<DropzoneProps> = ({ onImagesSelected }) => {
+    const [previews, setPreviews] = useState<string[]>([]);
+    const [selectedCount, setSelectedCount] = useState<number>(0);
 
     const onDrop = useCallback((acceptedFiles: File[]) => {
         if (acceptedFiles && acceptedFiles.length > 0) {
-            const file = acceptedFiles[0];
+            previews.forEach((previewUrl) => URL.revokeObjectURL(previewUrl));
 
-            // Crear una URL de previsualización
-            const objectUrl = URL.createObjectURL(file);
-            setPreview(objectUrl);
+            const nextPreviews = acceptedFiles.slice(0, 6).map((file) => URL.createObjectURL(file));
+            setPreviews(nextPreviews);
+            setSelectedCount(acceptedFiles.length);
 
-            // Llamar al callback con el archivo seleccionado
-            onImageSelected(file);
-
-            // Limpiar la URL de previsualización cuando el componente se desmonte
-            return () => URL.revokeObjectURL(objectUrl);
+            // Llamar al callback con los archivos seleccionados
+            onImagesSelected(acceptedFiles);
         }
-    }, [onImageSelected]);
+    }, [onImagesSelected, previews]);
 
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,
         accept: {
             'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp']
         },
-        maxFiles: 1,
-        multiple: false
+        maxFiles: 100,
+        multiple: true
     });
+
+    React.useEffect(() => {
+        return () => {
+            previews.forEach((previewUrl) => URL.revokeObjectURL(previewUrl));
+        };
+    }, [previews]);
 
     return (
         <div className="w-full max-w-xl mx-auto">
@@ -48,18 +52,28 @@ const Dropzone: React.FC<DropzoneProps> = ({ onImageSelected }) => {
                 `}
             >
                 <input {...getInputProps()} />
-                {preview ? (
-                    <div className="relative h-64 w-full">
-                        <div className="absolute inset-0 rounded-lg overflow-hidden">
-                            <div className="absolute inset-0 bg-gradient-to-br from-indigo-900/10 to-purple-900/20 z-10"></div>
-                            <Image
-                                src={preview}
-                                alt="Vista previa"
-                                fill
-                                style={{ objectFit: 'contain' }}
-                                className="rounded-lg border border-slate-700 bg-slate-800/50 backdrop-blur-sm"
-                            />
+                {previews.length > 0 ? (
+                    <div className="space-y-3">
+                        <div className="text-sm text-slate-300 font-medium">
+                            {selectedCount} {selectedCount === 1 ? 'imagen seleccionada' : 'imagenes seleccionadas'}
                         </div>
+                        <div className="grid grid-cols-2 sm:grid-cols-3 gap-3">
+                            {previews.map((previewUrl, index) => (
+                                <div key={`${previewUrl}-${index}`} className="relative h-28 rounded-lg overflow-hidden border border-slate-700 bg-slate-800/50">
+                                    <Image
+                                        src={previewUrl}
+                                        alt={`Vista previa ${index + 1}`}
+                                        fill
+                                        style={{ objectFit: 'cover' }}
+                                    />
+                                </div>
+                            ))}
+                        </div>
+                        {selectedCount > previews.length && (
+                            <p className="text-xs text-slate-400">
+                                Mostrando {previews.length} de {selectedCount} previsualizaciones.
+                            </p>
+                        )}
                     </div>
                 ) : (
                     <div className="flex flex-col items-center justify-center h-48">
@@ -68,10 +82,10 @@ const Dropzone: React.FC<DropzoneProps> = ({ onImageSelected }) => {
                         </div>
                         <p className="mt-2 text-base text-slate-300 font-medium">
                             {isDragActive
-                                ? 'Suelta la imagen aquí'
-                                : 'Arrastra y suelta una imagen, o haz clic para seleccionar'}
+                                ? 'Suelta las imagenes aqui'
+                                : 'Arrastra y suelta imagenes, o haz clic para seleccionar'}
                         </p>
-                        <p className="mt-1 text-xs text-slate-500">PNG, JPG, JPEG, GIF, WEBP hasta 10MB</p>
+                        <p className="mt-1 text-xs text-slate-500">PNG, JPG, JPEG, GIF, WEBP. Hasta 100 archivos por lote.</p>
 
                         {/* <div className="mt-4 p-2 rounded-lg bg-slate-800/80 inline-flex items-center text-xs text-slate-400">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 mr-1 text-indigo-400">
