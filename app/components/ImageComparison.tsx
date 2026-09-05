@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 
 interface ImageComparisonProps {
@@ -32,6 +32,7 @@ const ImageComparison: React.FC<ImageComparisonProps> = ({
     originalFilename,
     imageDimensions
 }) => {
+    const [htmlCopied, setHtmlCopied] = useState(false);
 
     const formatBytes = (bytes: number): string => {
         if (bytes === 0) return '0 Bytes';
@@ -62,6 +63,23 @@ const ImageComparison: React.FC<ImageComparisonProps> = ({
         document.body.appendChild(link);
         link.click();
         document.body.removeChild(link);
+    };
+
+    const baseFilename = originalFilename ? originalFilename.replace(/\.[^/.]+$/, '') : 'imagen';
+    const pictureHtml = `<picture>${avifImageUrl ? `
+    <source srcset="./images/${baseFilename}.avif" type="image/avif">` : ''}${webpImageUrl ? `
+    <source srcset="./images/${baseFilename}.webp" type="image/webp">` : ''}
+    <img src="./images/${originalFilename || 'imagen.jpg'}" alt="Descripción de la imagen" width="${imageDimensions?.width || 800}" height="${imageDimensions?.height || 800}">
+</picture>`;
+
+    const copyHtml = async () => {
+        try {
+            await navigator.clipboard.writeText(pictureHtml);
+            setHtmlCopied(true);
+            window.setTimeout(() => setHtmlCopied(false), 2000);
+        } catch {
+            setHtmlCopied(false);
+        }
     };
 
     // No mostrar nada si no hay imagen original
@@ -331,20 +349,25 @@ const ImageComparison: React.FC<ImageComparisonProps> = ({
                 {/* Código HTML para implementación */}
                 {(webpImageUrl || avifImageUrl) && (
                     <div className="mt-8 p-5 border border-slate-700 rounded-xl bg-slate-800/50 shadow-inner">
-                        <h4 className="text-base font-semibold text-white mb-4 flex items-center">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-2 text-indigo-400">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5" />
-                            </svg>
-                            Código HTML para tu sitio web
-                        </h4>
+                        <div className="flex items-center justify-between gap-3 mb-4">
+                            <h4 className="text-base font-semibold text-white flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-5 h-5 mr-2 text-indigo-400">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5" />
+                                </svg>
+                                Código HTML para tu sitio web
+                            </h4>
+                            <button
+                                type="button"
+                                onClick={copyHtml}
+                                className="px-3 py-1.5 rounded-md text-xs font-medium bg-slate-700 hover:bg-slate-600 text-slate-100 border border-slate-600 transition-colors whitespace-nowrap"
+                            >
+                                {htmlCopied ? 'Copiado' : 'Copiar HTML'}
+                            </button>
+                        </div>
 
                         <div className="bg-slate-900 p-4 rounded-lg border border-slate-700 overflow-hidden">
                             <pre className="text-sm overflow-x-auto whitespace-pre-wrap text-slate-300 font-mono">
-                                {`<picture>${avifImageUrl ? `
-    <source srcset="./images/${originalFilename ? originalFilename.replace(/\.[^/.]+$/, "") : 'imagen'}.avif" type="image/avif">` : ''}${webpImageUrl ? `
-    <source srcset="./images/${originalFilename ? originalFilename.replace(/\.[^/.]+$/, "") : 'imagen'}.webp" type="image/webp">` : ''}
-    <img src="./images/${originalFilename || 'imagen.jpg'}" alt="Descripción de la imagen" width="${imageDimensions?.width || 800}" height="${imageDimensions?.height || 800}">
-</picture>`}
+                                {pictureHtml}
                             </pre>
                         </div>
 
