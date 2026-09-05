@@ -5,147 +5,128 @@ Squeeze es una aplicación web que permite a los usuarios optimizar recursos web
 ## Características
 
 ### Optimización de imágenes
-- Subida de imágenes mediante arrastrar y soltar
+- Subida de imágenes mediante arrastrar y soltar (una o en lote)
 - Conversión a formatos WebP y AVIF
 - Control de calidad ajustable
 - Comparación visual entre la imagen original y la optimizada
 - Estadísticas de ahorro de tamaño
 - Descarga directa de imágenes optimizadas
-- Optimización en el navegador (client-side) o en el servidor
+- Optimización en lote con ZIP (hasta 100 archivos)
 
 ### Optimización de fuentes
 - Obtención directa de fuentes web desde Google Fonts
-- Descarga de formatos optimizados (WOFF2, WOFF)
+- Descarga de formatos optimizados (WOFF2, WOFF, TTF)
 - Generación de CSS para incluir en proyectos web
-- Soporte para diferentes pesos y estilos de fuente
+- Soporte para diferentes pesos de fuente
 
 ## Tecnologías utilizadas
 
-- [Next.js 15.5+](https://nextjs.org) - Framework de React con App Router
-- [Tailwind CSS 4](https://tailwindcss.com) - Estilos y diseño
-- [Sharp](https://sharp.pixelplumbing.com) - Procesamiento de imágenes en servidor
-- [React 19](https://react.dev) - Biblioteca UI con hooks avanzados
-- [React Dropzone](https://react-dropzone.js.org) - Subida de archivos
-- [TypeScript](https://www.typescriptlang.org) - Tipado estático
-- [Web APIs](https://developer.mozilla.org/es/docs/Web/API/Canvas_API) - Para procesamiento de imágenes en cliente
+- [Next.js 16+](https://nextjs.org) — Framework de React con App Router
+- [Tailwind CSS 4](https://tailwindcss.com) — Estilos y diseño
+- [Sharp](https://sharp.pixelplumbing.com) — Procesamiento de imágenes en servidor
+- [React 19](https://react.dev) — Biblioteca UI
+- [React Dropzone](https://react-dropzone.js.org) — Subida de archivos
+- [TypeScript](https://www.typescriptlang.org) — Tipado estático
+- [JSZip](https://stuk.github.io/jszip/) — Empaquetado de lotes en ZIP
 
 ## Comenzando
 
 ### Requisitos previos
 
 - Node.js 18.17 o superior
-- npm o yarn
+- npm, pnpm o yarn
 - Navegador moderno con soporte para WebP y opcionalmente AVIF
 
 ### Instalación
 
 1. Clona este repositorio:
+
 ```bash
-git clone https://github.com/tuusuario/squeeze.git
+git clone https://github.com/Sergitxin22/squeeze.git
 cd squeeze
 ```
 
 2. Instala las dependencias:
+
 ```bash
 npm install
 # o
 yarn install
+# o
+pnpm install
 ```
 
 3. Inicia el servidor de desarrollo:
+
 ```bash
 npm run dev
 # o
 yarn dev
+# o
+pnpm dev
 ```
 
 4. Abre [http://localhost:3000](http://localhost:3000) en tu navegador.
 
+En Windows, si la instalación de `sharp` falla, asegúrate de tener las dependencias nativas (prebuilds o Visual Studio Build Tools). En la mayoría de casos `npm install` descarga binarios precompilados.
+
 ## Uso
 
 ### Optimización de imágenes
+
 1. Ve a la página principal.
-2. Arrastra y suelta una imagen o haz clic para seleccionar una.
-3. Selecciona el formato de salida deseado (WebP o AVIF).
+2. Arrastra y suelta una o varias imágenes, o haz clic para seleccionarlas.
+3. Selecciona el formato de salida deseado (WebP, AVIF o ambos).
 4. Ajusta el nivel de calidad con el control deslizante.
-5. Elige entre optimización en cliente o servidor según tus necesidades.
-6. Haz clic en "Optimizar Imagen".
-7. Compara la calidad y el tamaño entre la imagen original y la optimizada.
-8. Descarga la imagen optimizada con el botón "Descargar".
+5. Haz clic en optimizar.
+6. Compara la calidad y el tamaño entre la imagen original y la optimizada (o descarga el ZIP si es un lote).
+7. Descarga el resultado con el botón correspondiente.
 
 ### Optimización de fuentes
-1. Ve a la página de fuentes (/fonts).
+
+1. Ve a la página de fuentes (`/fonts`).
 2. Ingresa el nombre exacto de la fuente de Google Fonts que deseas optimizar.
-3. Haz clic en "Optimizar y Descargar".
-4. Descarga los archivos de fuente optimizados en diferentes formatos.
-# Squeeze — Optimizador de imágenes y fuentes web
+3. Selecciona los grosores (weights) que necesites.
+4. Haz clic en "Optimizar y Descargar".
+5. Descarga los archivos de fuente en los distintos formatos y copia el CSS generado.
 
-Aplicación Next.js que permite optimizar imágenes (WebP / AVIF) y descargar fuentes optimizadas desde Google Fonts.
+## Endpoints
 
-Este repositorio contiene una pequeña UI (arrastrar y soltar) para subir imágenes, controles de calidad, comparación visual y dos endpoints API:
+- `POST /api/optimize`
+  - Entrada: FormData `{ file, format: 'webp'|'avif'|'both', webpQuality, avifQuality }`
+  - Salida: JSON con objetos `webp` y/o `avif` que contienen `data` (data URL base64), `size` y `savings`.
+- `POST /api/optimize-batch`
+  - Entrada: FormData `{ files, format, webpQuality, avifQuality }` (hasta 100 archivos)
+  - Salida: ZIP con las imágenes convertidas.
+- `POST /api/optimize-font`
+  - Entrada: JSON `{ family, weights? }`
+  - Salida: JSON `{ files: [{ name, type, data(base64), size }], css, summary }`
 
-- `/api/optimize` — recibe un FormData con `file`, `format`, `webpQuality` y `avifQuality`. Devuelve versiones en WebP y/o AVIF (base64) y estadísticas.
-- `/api/optimize-font` — recibe JSON con `{ family, weights }`, descarga las fuentes desde Google Fonts (probando distintos User-Agents) y devuelve los archivos en base64 + CSS.
+Por defecto no hay límite de tamaño de archivo (uso local). Si más adelante publicas la app, copia `.env.example` a `.env.local` y define `NEXT_PUBLIC_MAX_FILE_SIZE_MB`, `NEXT_PUBLIC_MAX_BATCH_SIZE_MB` y los `RATE_LIMIT_*`.
 
-## Tecnologías
-
-- Next.js (App Router)
-- React 19 + TypeScript
-- Tailwind CSS
-- Sharp (procesamiento de imágenes en servidor)
-- React Dropzone (subida)
-
-## Requisitos
-
-- Node.js 18+ (recomendado)
-- npm o yarn
-- En Windows, si la instalación de `sharp` falla, asegúrate de tener las dependencias nativas (prebuilds o Visual Studio Build Tools). En la mayoría de casos `npm install` descarga binarios precompilados.
-
-## Instalación rápida
-
-1. Instala dependencias:
-
-```bash
-npm install
-```
-
-2. Ejecuta en modo desarrollo:
-
-```bash
-npm run dev
-```
-
-Abre http://localhost:3000
-
-## Endpoints importantes
-
-- POST /api/optimize
-   - Entrada: FormData { file: File, format: 'webp'|'avif'|'both', webpQuality: string (10-100), avifQuality: string (10-100) }
-   - Salida: JSON con objetos `webp` y/o `avif` que contienen `data` (data URL base64), `size` y `savings`.
-
-- POST /api/optimize-font
-   - Entrada: JSON { family: string, weights?: number[] }
-   - Salida: JSON { files: [{ name, type, data(base64), size }], css: string, summary }
-
-## Estructura de archivos (resumen rápido)
+## Estructura de archivos
 
 - `app/page.tsx` — página principal que carga el optimizador de imágenes.
+- `app/images/page.tsx` — alias de la página de imágenes.
 - `app/fonts/page.tsx` — página para optimizar y descargar fuentes desde Google Fonts.
-- `app/layout.tsx` — layout raíz (fuentes Google importadas, Footer).
-- `app/components/Dropzone.tsx` — componente de arrastrar y soltar (genera preview y devuelve File).
-- `app/components/ImageOptimizer.tsx` — orquestador principal del flujo de optimización (estado, interacción con API).
-- `app/components/OptimizationControls.tsx` — controles de formato/quality y botón de optimizar.
-- `app/components/ImageComparison.tsx` — muestra original + WebP + AVIF y ofrece descargas y código <picture>.
+- `app/layout.tsx` — layout raíz (fuentes, Footer).
+- `app/components/Dropzone.tsx` — arrastrar y soltar (genera preview y devuelve `File`).
+- `app/components/ImageOptimizer.tsx` — orquestador del flujo de optimización (estado, API).
+- `app/components/OptimizationControls.tsx` — controles de formato/calidad y botón de optimizar.
+- `app/components/ImageComparison.tsx` — muestra original + WebP + AVIF, descargas y código `<picture>`.
 - `app/components/Header.tsx`, `app/components/Footer.tsx` — navegación y pie de página.
-- `app/api/optimize/route.ts` — API route que usa `sharp` para generar WebP/AVIF desde el buffer subido.
-- `app/api/optimize-font/route.ts` — API route que usa `utils/fontOptimizer.ts` para descargar y empaquetar fuentes.
-- `utils/fontOptimizer.ts` — lógica para construir la URL de Google Fonts, solicitar CSS con distintos User-Agents, extraer URLs y descargar archivos (devuelve y guarda archivos en disco temporal).
+- `app/api/optimize/route.ts` — API que usa `sharp` para generar WebP/AVIF.
+- `app/api/optimize-batch/route.ts` — API de lote; devuelve un ZIP.
+- `app/api/optimize-font/route.ts` — API que usa `utils/fontOptimizer.ts` para descargar y empaquetar fuentes.
+- `utils/fontOptimizer.ts` — construye la URL de Google Fonts, solicita CSS con distintos User-Agents, extrae URLs y descarga archivos en un directorio temporal.
+- `utils/apiGuards.ts` — validación, límites opcionales y rate limit.
 
 ## Notas y consideraciones
 
-- Las imágenes se procesan en servidor con `sharp` (API `/api/optimize`). El cliente hace previsualización y descarga de los resultados devueltos por la API.
-- La ruta de fuentes descarga archivos y devuelve base64 para facilitar la descarga desde el navegador. El código intenta limpiar el directorio temporal al terminar.
-- `next.config.ts` permite servir imágenes AVIF/WebP y permite SVGs.
+- Las imágenes se procesan en servidor con `sharp` (`/api/optimize` y `/api/optimize-batch`). El cliente hace previsualización y descarga de los resultados.
+- La ruta de fuentes descarga archivos y devuelve base64 para facilitar la descarga desde el navegador. El directorio temporal se elimina al terminar.
+- `next.config.ts` habilita los formatos AVIF y WebP para `next/image`.
+- Las descargas de fuentes solo se permiten desde `fonts.googleapis.com` y `fonts.gstatic.com`.
 
 ## Scripts
 
@@ -156,10 +137,9 @@ Abre http://localhost:3000
 
 ## Próximos pasos / mejoras sugeridas
 
-- Añadir manejo de tamaños máximos y validaciones más estrictas en las APIs.
 - Añadir tests unitarios para `utils/fontOptimizer.ts`.
-- Permitir selección de múltiples pesos y estilos desde la UI de fuentes.
+- Permitir estilos italic además de los pesos en la UI de fuentes.
 
----
+## Licencia
 
-Si quieres, puedo generar un apartado de troubleshooting para instalar `sharp` en Windows o añadir tests básicos para `fontOptimizer`.
+MIT
