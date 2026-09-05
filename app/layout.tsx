@@ -18,6 +18,20 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Squeeze - Optimizador de recursos web",
   description: "Optimiza tus imágenes y fuentes para la web mejorando el rendimiento de tu sitio web",
+  metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
+  openGraph: {
+    title: "Squeeze",
+    description: "Optimiza imágenes y fuentes para la web",
+    images: [{ url: "/og.png", width: 1920, height: 1080, alt: "Squeeze — optimiza imágenes y fuentes para la web" }],
+    locale: "es_ES",
+    type: "website",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Squeeze",
+    description: "Optimiza imágenes y fuentes para la web",
+    images: ["/og.png"],
+  },
 };
 
 export const viewport: Viewport = {
