@@ -19,7 +19,7 @@ Squeeze es una aplicación web que permite a los usuarios optimizar recursos web
 - Obtención directa de fuentes web desde Google Fonts
 - Descarga de formatos optimizados (WOFF2, WOFF, TTF)
 - Generación de CSS para incluir en proyectos web
-- Soporte para diferentes pesos de fuente
+- Soporte para diferentes pesos de fuente y estilo italic
 
 ## Tecnologías utilizadas
 
@@ -89,8 +89,9 @@ En Windows, si la instalación de `sharp` falla, asegúrate de tener las depende
 1. Ve a la página de fuentes (`/fonts`).
 2. Ingresa el nombre exacto de la fuente de Google Fonts que deseas optimizar.
 3. Selecciona los grosores (weights) que necesites.
-4. Haz clic en "Optimizar".
-5. Descarga un formato concreto o el ZIP. El CSS se copia al portapapeles con el botón "Copiar CSS".
+4. Selecciona los grosores (weights) y, si lo necesitas, marca "Incluir italic".
+5. Haz clic en "Optimizar".
+6. Descarga un formato concreto o el ZIP. El CSS se copia al portapapeles con el botón "Copiar CSS".
 
 ## Endpoints
 
@@ -136,11 +137,7 @@ Por defecto no hay límite de tamaño de archivo (uso local). Si más adelante p
 - `npm run build` - build de producción
 - `npm run start` - servidor de producción
 - `npm run lint` - linter
-
-## Próximos pasos / mejoras sugeridas
-
-- Añadir tests unitarios para `utils/fontOptimizer.ts`.
-- Permitir estilos italic además de los pesos en la UI de fuentes.
+- `npm test` - tests unitarios (`utils/fontOptimizer.ts`)
 
 ## Licencia
 

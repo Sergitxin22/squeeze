@@ -128,3 +128,7 @@ export function parseFontWeights(value: unknown): number[] {
 
     return weights.slice(0, 9);
 }
+
+export function parseIncludeItalic(value: unknown): boolean {
+    return value === true;
+}

@@ -38,6 +38,7 @@ export default function FontsPage() {
         );
     };
     const [fontCss, setFontCss] = useState('');
+    const [includeItalic, setIncludeItalic] = useState(false);
     const [downloading, setDownloading] = useState(false);
     const [error, setError] = useState('');
     const [cssCopied, setCssCopied] = useState(false);
@@ -56,9 +57,7 @@ export default function FontsPage() {
                 body: JSON.stringify({
                     family: fontName,
                     weights: selectedWeights,
-                    ital: false,
-                    subset: 'latin',
-                    display: 'swap',
+                    includeItalic,
                 }),
             });
             const data = await res.json();
@@ -186,6 +185,15 @@ export default function FontsPage() {
                             {selectedWeights.length === 0 && (
                                 <p className="text-rose-400 text-xs mt-2">Debes seleccionar al menos un grosor.</p>
                             )}
+                            <label className="mt-3 flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
+                                <input
+                                    type="checkbox"
+                                    checked={includeItalic}
+                                    onChange={(e) => setIncludeItalic(e.target.checked)}
+                                    className="h-4 w-4 rounded border-slate-600 bg-slate-800 text-indigo-600 focus:ring-indigo-500"
+                                />
+                                Incluir italic (cursiva)
+                            </label>
                         </div>
                     </form>
 
@@ -198,8 +206,10 @@ export default function FontsPage() {
                             <div className="flex gap-3 mb-6 flex-wrap bg-slate-800/50 p-4 rounded-lg">
                                 {fontFiles.map(file => {
                                     const ext = file.name.split('.').pop()?.toUpperCase() || '';
-                                    const nameParts = file.name.split('-');
-                                    const weight = nameParts.length >= 2 ? nameParts[nameParts.length - 1].split('.')[0] : '400';
+                                    const nameParts = file.name.replace(/\.[^/.]+$/, '').split('-');
+                                    const weight = nameParts[nameParts.length - 1] || '400';
+                                    const style = nameParts[nameParts.length - 2] || 'normal';
+                                    const styleLabel = style === 'italic' ? ' italic' : '';
 
                                     return (
                                         <button
@@ -210,7 +220,7 @@ export default function FontsPage() {
                                             <svg xmlns="http://www.w3.org/2000/svg" className="h-4 w-4 text-indigo-400" viewBox="0 0 20 20" fill="currentColor">
                                                 <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
                                             </svg>
-                                            {ext} - {weight}
+                                            {ext} - {weight}{styleLabel}
                                         </button>
                                     );
                                 })}

@@ -7,6 +7,7 @@ import {
     checkRateLimit,
     parseFontFamily,
     parseFontWeights,
+    parseIncludeItalic,
 } from '../../../utils/apiGuards';
 
 export const runtime = 'nodejs';
@@ -24,8 +25,10 @@ export async function POST(request: NextRequest) {
         return NextResponse.json({ error: 'JSON no valido' }, { status: 400 });
     }
 
-    const family = parseFontFamily((body as { family?: unknown })?.family);
-    const weights = parseFontWeights((body as { weights?: unknown })?.weights);
+    const payload = body as { family?: unknown; weights?: unknown; includeItalic?: unknown; ital?: unknown };
+    const family = parseFontFamily(payload.family);
+    const weights = parseFontWeights(payload.weights);
+    const includeItalic = parseIncludeItalic(payload.includeItalic ?? payload.ital);
 
     if (!family) {
         return NextResponse.json({ error: 'Nombre de fuente no valido' }, { status: 400 });
@@ -40,7 +43,7 @@ export async function POST(request: NextRequest) {
     try {
         fs.mkdirSync(tempDir, { recursive: true });
 
-        await downloadGoogleFont(family, weights, tempDir);
+        await downloadGoogleFont(family, weights, tempDir, includeItalic);
 
         const filesInDir = fs.readdirSync(tempDir);
         const files = filesInDir.map((fileName) => {
@@ -101,11 +104,12 @@ export async function POST(request: NextRequest) {
                 '900': 'Black',
             };
             const weightName = weightNames[weight] || 'Regular';
+            const styleLabel = style === 'italic' ? ' Italic' : '';
 
             const srcLines = [
                 `local("${family}")`,
-                `local("${family} ${weightName}")`,
-                `local("${family.replace(/\s+/g, '')}-${weightName}")`,
+                `local("${family} ${weightName}${styleLabel}")`,
+                `local("${family.replace(/\s+/g, '')}-${weightName}${styleLabel.trim()}")`,
                 ...groupFiles.map((file) => {
                     const ext = path.extname(file.name).slice(1);
                     const format = formatMap[ext] || ext;

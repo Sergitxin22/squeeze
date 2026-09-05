@@ -6,7 +6,8 @@
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
-    "lint": "eslint"
+    "lint": "eslint",
+    "test": "node --import tsx --test utils/fontOptimizer.test.ts"
   },
   "dependencies": {
     "@heroicons/react": "^2.2.0",
@@ -26,6 +27,7 @@
     "eslint": "^9.39.5",
     "eslint-config-next": "15.5.2",
     "tailwindcss": "^4.3.3",
+    "tsx": "^4.23.13",
     "typescript": "^5.9.3"
   },
   "allowScripts": {

@@ -14,7 +14,7 @@ const UA = {
     ttf: 'Mozilla/5.0 (Macintosh; U; Intel Mac OS X 10_6_3; en-us) AppleWebKit/533.16 (KHTML, like Gecko) Version/5.0 Safari/533.16',
 };
 
-function assertAllowedUrl(urlString: string): URL {
+export function assertAllowedUrl(urlString: string): URL {
     let parsed: URL;
     try {
         parsed = new URL(urlString);
@@ -86,7 +86,7 @@ function fetchUrl(url: string, ua: string, redirectsLeft = MAX_REDIRECTS): Promi
     });
 }
 
-function extractUrls(css: string) {
+export function extractUrls(css: string) {
     const entries: { url: string; format: string; weight: string; style: string }[] = [];
     const blocks = css.split('@font-face');
 
@@ -116,13 +116,22 @@ function extractUrls(css: string) {
     return entries;
 }
 
-function buildCssUrl(family: string, weights: number[]) {
-    return `https://fonts.googleapis.com/css2?family=${encodeURIComponent(family)}:wght@${weights.join(';')}&display=swap`;
+export function buildCssUrl(family: string, weights: number[], includeItalic = false) {
+    const encodedFamily = encodeURIComponent(family);
+    if (!includeItalic) {
+        return `https://fonts.googleapis.com/css2?family=${encodedFamily}:wght@${weights.join(';')}&display=swap`;
+    }
+
+    const pairs = [
+        ...weights.map((weight) => `0,${weight}`),
+        ...weights.map((weight) => `1,${weight}`),
+    ];
+    return `https://fonts.googleapis.com/css2?family=${encodedFamily}:ital,wght@${pairs.join(';')}&display=swap`;
 }
 
-export async function downloadGoogleFont(family: string, weights: number[], outDir: string) {
+export async function downloadGoogleFont(family: string, weights: number[], outDir: string, includeItalic = false) {
     if (!fs.existsSync(outDir)) fs.mkdirSync(outDir, { recursive: true });
-    const cssUrl = buildCssUrl(family, weights);
+    const cssUrl = buildCssUrl(family, weights, includeItalic);
     let totalFilesDownloaded = 0;
 
     for (const [format, ua] of Object.entries(UA)) {
