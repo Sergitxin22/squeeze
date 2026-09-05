@@ -185,15 +185,20 @@ export default function FontsPage() {
                             {selectedWeights.length === 0 && (
                                 <p className="text-rose-400 text-xs mt-2">Debes seleccionar al menos un grosor.</p>
                             )}
-                            <label className="mt-3 flex items-center gap-2 text-sm text-slate-300 cursor-pointer">
-                                <input
-                                    type="checkbox"
-                                    checked={includeItalic}
-                                    onChange={(e) => setIncludeItalic(e.target.checked)}
-                                    className="h-4 w-4 rounded border-slate-600 bg-slate-800 text-indigo-600 focus:ring-indigo-500"
-                                />
-                                Incluir italic (cursiva)
-                            </label>
+                            <div className="mt-3">
+                                <p className="text-sm text-slate-400 mb-2">Estilo:</p>
+                                <button
+                                    type="button"
+                                    onClick={() => setIncludeItalic((prev) => !prev)}
+                                    aria-pressed={includeItalic}
+                                    className={`px-3 py-1.5 rounded-md text-sm font-medium transition-colors ${includeItalic
+                                        ? 'bg-indigo-600 text-white border border-indigo-500 shadow-sm'
+                                        : 'bg-slate-800 text-slate-300 border border-slate-700 hover:bg-slate-700'
+                                        }`}
+                                >
+                                    Incluir italic (cursiva)
+                                </button>
+                            </div>
                         </div>
                     </form>
 
