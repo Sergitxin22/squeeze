@@ -103,6 +103,7 @@ const ImageComparison: React.FC<ImageComparisonProps> = ({
                                 src={originalImage}
                                 alt="Imagen Original"
                                 fill
+                                unoptimized
                                 style={{ objectFit: 'contain' }}
                                 className="z-20"
                             />
@@ -150,6 +151,7 @@ const ImageComparison: React.FC<ImageComparisonProps> = ({
                                     src={webpImageUrl}
                                     alt="Imagen WebP"
                                     fill
+                                    unoptimized
                                     style={{ objectFit: 'contain' }}
                                     className="z-20"
                                 />
@@ -198,6 +200,7 @@ const ImageComparison: React.FC<ImageComparisonProps> = ({
                                     src={avifImageUrl}
                                     alt="Imagen AVIF"
                                     fill
+                                    unoptimized
                                     style={{ objectFit: 'contain' }}
                                     className="z-20"
                                 />

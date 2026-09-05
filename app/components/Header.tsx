@@ -31,7 +31,7 @@ export default function Header({ currentPage }: HeaderProps) {
                             Optimizar Fuentes
                         </Link>
                     ) : <Link
-                        href=".."
+                        href="/"
                         className="px-4 py-2 rounded-lg bg-gradient-to-r from-indigo-600 to-violet-600 hover:from-indigo-700 hover:to-violet-700 text-white font-medium shadow-md transition-all duration-300"
                     >
                         Optimizar Imagenes

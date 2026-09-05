@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Inter, JetBrains_Mono } from "next/font/google";
 import "./globals.css";
 import Footer from "./components/Footer";
@@ -18,6 +18,9 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "Squeeze - Optimizador de recursos web",
   description: "Optimiza tus imágenes y fuentes para la web mejorando el rendimiento de tu sitio web",
+};
+
+export const viewport: Viewport = {
   themeColor: "#0f172a",
 };
 
@@ -28,9 +31,6 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" className="dark">
-      <head>
-        <meta name="theme-color" content="#0f172a" />
-      </head>
       <body
         className={`${inter.variable} ${jetbrainsMono.variable} antialiased bg-slate-950 text-slate-200 min-h-screen selection:bg-indigo-500 selection:text-white flex flex-col`}
       >

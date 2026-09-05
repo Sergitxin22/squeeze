@@ -103,6 +103,7 @@ export default function FontsPage() {
                             value={fontName}
                             onChange={e => setFontName(e.target.value)}
                             placeholder="Nombre exacto de la fuente (ej: Roboto)"
+                            maxLength={63}
                             className="flex-1 px-4 py-3 rounded-lg bg-slate-800 border border-slate-700 text-slate-200 focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 placeholder-slate-500"
                         />
                         <button
