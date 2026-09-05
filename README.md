@@ -1,5 +1,7 @@
 # Squeeze - Optimizador de imágenes y fuentes web
 
+![Squeeze](public/og.png)
+
 Squeeze es una aplicación web que permite a los usuarios optimizar recursos web para mejorar el rendimiento de sus sitios. Similar a [Squoosh.app](https://squoosh.app) para imágenes, esta herramienta ayuda a reducir significativamente el tamaño de imágenes y fuentes sin comprometer la calidad visual.
 
 ## Características
@@ -21,13 +23,13 @@ Squeeze es una aplicación web que permite a los usuarios optimizar recursos web
 
 ## Tecnologías utilizadas
 
-- [Next.js 16+](https://nextjs.org) — Framework de React con App Router
-- [Tailwind CSS 4](https://tailwindcss.com) — Estilos y diseño
-- [Sharp](https://sharp.pixelplumbing.com) — Procesamiento de imágenes en servidor
-- [React 19](https://react.dev) — Biblioteca UI
-- [React Dropzone](https://react-dropzone.js.org) — Subida de archivos
-- [TypeScript](https://www.typescriptlang.org) — Tipado estático
-- [JSZip](https://stuk.github.io/jszip/) — Empaquetado de lotes en ZIP
+- [Next.js 16+](https://nextjs.org) - Framework de React con App Router
+- [Tailwind CSS 4](https://tailwindcss.com) - Estilos y diseño
+- [Sharp](https://sharp.pixelplumbing.com) - Procesamiento de imágenes en servidor
+- [React 19](https://react.dev) - Biblioteca UI
+- [React Dropzone](https://react-dropzone.js.org) - Subida de archivos
+- [TypeScript](https://www.typescriptlang.org) - Tipado estático
+- [JSZip](https://stuk.github.io/jszip/) - Empaquetado de lotes en ZIP
 
 ## Comenzando
 
@@ -106,20 +108,20 @@ Por defecto no hay límite de tamaño de archivo (uso local). Si más adelante p
 
 ## Estructura de archivos
 
-- `app/page.tsx` — página principal que carga el optimizador de imágenes.
-- `app/images/page.tsx` — alias de la página de imágenes.
-- `app/fonts/page.tsx` — página para optimizar y descargar fuentes desde Google Fonts.
-- `app/layout.tsx` — layout raíz (fuentes, Footer).
-- `app/components/Dropzone.tsx` — arrastrar y soltar (genera preview y devuelve `File`).
-- `app/components/ImageOptimizer.tsx` — orquestador del flujo de optimización (estado, API).
-- `app/components/OptimizationControls.tsx` — controles de formato/calidad y botón de optimizar.
-- `app/components/ImageComparison.tsx` — muestra original + WebP + AVIF, descargas y código `<picture>`.
-- `app/components/Header.tsx`, `app/components/Footer.tsx` — navegación y pie de página.
-- `app/api/optimize/route.ts` — API que usa `sharp` para generar WebP/AVIF.
-- `app/api/optimize-batch/route.ts` — API de lote; devuelve un ZIP.
-- `app/api/optimize-font/route.ts` — API que usa `utils/fontOptimizer.ts` para descargar y empaquetar fuentes.
-- `utils/fontOptimizer.ts` — construye la URL de Google Fonts, solicita CSS con distintos User-Agents, extrae URLs y descarga archivos en un directorio temporal.
-- `utils/apiGuards.ts` — validación, límites opcionales y rate limit.
+- `app/page.tsx` - página principal que carga el optimizador de imágenes.
+- `app/images/page.tsx` - alias de la página de imágenes.
+- `app/fonts/page.tsx` - página para optimizar y descargar fuentes desde Google Fonts.
+- `app/layout.tsx` - layout raíz (fuentes, Footer).
+- `app/components/Dropzone.tsx` - arrastrar y soltar (genera preview y devuelve `File`).
+- `app/components/ImageOptimizer.tsx` - orquestador del flujo de optimización (estado, API).
+- `app/components/OptimizationControls.tsx` - controles de formato/calidad y botón de optimizar.
+- `app/components/ImageComparison.tsx` - muestra original + WebP + AVIF, descargas y código `<picture>`.
+- `app/components/Header.tsx`, `app/components/Footer.tsx` - navegación y pie de página.
+- `app/api/optimize/route.ts` - API que usa `sharp` para generar WebP/AVIF.
+- `app/api/optimize-batch/route.ts` - API de lote; devuelve un ZIP.
+- `app/api/optimize-font/route.ts` - API que usa `utils/fontOptimizer.ts` para descargar y empaquetar fuentes.
+- `utils/fontOptimizer.ts` - construye la URL de Google Fonts, solicita CSS con distintos User-Agents, extrae URLs y descarga archivos en un directorio temporal.
+- `utils/apiGuards.ts` - validación, límites opcionales y rate limit.
 
 ## Notas y consideraciones
 
@@ -130,10 +132,10 @@ Por defecto no hay límite de tamaño de archivo (uso local). Si más adelante p
 
 ## Scripts
 
-- `npm run dev` — inicia Next.js en modo desarrollo
-- `npm run build` — build de producción
-- `npm run start` — servidor de producción
-- `npm run lint` — linter
+- `npm run dev` - inicia Next.js en modo desarrollo
+- `npm run build` - build de producción
+- `npm run start` - servidor de producción
+- `npm run lint` - linter
 
 ## Próximos pasos / mejoras sugeridas
 
