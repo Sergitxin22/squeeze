@@ -1,12 +1,32 @@
 'use client';
 
 import React, { useState } from 'react';
+import JSZip from 'jszip';
 import Header from '../components/Header';
+
+type FontFile = {
+    name: string;
+    type: string;
+    data: string;
+    size: number;
+};
+
+const downloadBlob = (blob: Blob, fileName: string) => {
+    const blobUrl = URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = blobUrl;
+    link.download = fileName;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    URL.revokeObjectURL(blobUrl);
+};
 
 export default function FontsPage() {
     const [fontName, setFontName] = useState('');
     const [selectedWeights, setSelectedWeights] = useState<number[]>([400]);
-    const [fontFiles, setFontFiles] = useState<any[]>([]);
+    const [fontFiles, setFontFiles] = useState<FontFile[]>([]);
+    const [packingZip, setPackingZip] = useState(false);
 
     const availableWeights = [100, 200, 300, 400, 500, 600, 700, 800, 900];
 
@@ -20,6 +40,7 @@ export default function FontsPage() {
     const [fontCss, setFontCss] = useState('');
     const [downloading, setDownloading] = useState(false);
     const [error, setError] = useState('');
+    const [cssCopied, setCssCopied] = useState(false);
 
     // Descargar y optimizar fuente usando la API
     const handleOptimizeFont = async () => {
@@ -46,8 +67,9 @@ export default function FontsPage() {
                     ? `La fuente "${fontName}" no ha sido encontrada. Verifica que el nombre sea exacto y que esté disponible en Google Fonts.`
                     : data.error);
             } else {
-                setFontFiles(data.files || []);
+                setFontFiles((data.files || []) as FontFile[]);
                 setFontCss(data.css || '');
+                setCssCopied(false);
             }
         } catch (err) {
             setError('Error al optimizar la fuente.');
@@ -56,7 +78,6 @@ export default function FontsPage() {
         }
     };
 
-    // Descargar archivo desde base64
     const downloadBase64 = (base64: string, filename: string, mime: string) => {
         const link = document.createElement('a');
         link.href = `data:${mime};base64,${base64}`;
@@ -66,15 +87,35 @@ export default function FontsPage() {
         document.body.removeChild(link);
     };
 
-    // Función para descargar todos los archivos con un pequeño retraso entre cada uno
+    const downloadFontZip = async (files: FontFile[], family: string) => {
+        const zip = new JSZip();
+        for (const file of files) {
+            zip.file(file.name, file.data, { base64: true });
+        }
+
+        const zipBlob = await zip.generateAsync({ type: 'blob', compression: 'DEFLATE' });
+        const zipName = `${family.trim().toLowerCase().replace(/\s+/g, '-') || 'fuentes'}.zip`;
+        downloadBlob(zipBlob, zipName);
+    };
+
     const downloadAllFiles = async () => {
-        for (let i = 0; i < fontFiles.length; i++) {
-            const file = fontFiles[i];
-            downloadBase64(file.data, file.name, file.type);
-            // Pequeño retraso para evitar problemas en algunos navegadores
-            if (i < fontFiles.length - 1) {
-                await new Promise(resolve => setTimeout(resolve, 300));
-            }
+        if (!fontFiles.length || packingZip) return;
+        setPackingZip(true);
+        try {
+            await downloadFontZip(fontFiles, fontName);
+        } finally {
+            setPackingZip(false);
+        }
+    };
+
+    const copyCss = async () => {
+        if (!fontCss) return;
+        try {
+            await navigator.clipboard.writeText(fontCss);
+            setCssCopied(true);
+            window.setTimeout(() => setCssCopied(false), 2000);
+        } catch {
+            setCssCopied(false);
         }
     };
 
@@ -119,7 +160,7 @@ export default function FontsPage() {
                                     </svg>
                                     Procesando...
                                 </span>
-                            ) : 'Optimizar y Descargar'}
+                            ) : 'Optimizar'}
                         </button>
                     </div>
 
@@ -178,23 +219,33 @@ export default function FontsPage() {
 
                         <button
                             onClick={downloadAllFiles}
-                            className="w-full px-4 py-3 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-medium flex items-center justify-center gap-2 shadow-md transition-all mb-6"
+                            disabled={packingZip}
+                            className="w-full px-4 py-3 rounded-lg bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-medium flex items-center justify-center gap-2 shadow-md transition-all mb-6 disabled:opacity-60"
                         >
                             <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
                                 <path fillRule="evenodd" d="M3 17a1 1 0 011-1h12a1 1 0 110 2H4a1 1 0 01-1-1zm3.293-7.707a1 1 0 011.414 0L9 10.586V3a1 1 0 112 0v7.586l1.293-1.293a1 1 0 111.414 1.414l-3 3a1 1 0 01-1.414 0l-3-3a1 1 0 010-1.414z" clipRule="evenodd" />
                             </svg>
-                            Descargar Todos los Formatos
+                            {packingZip ? 'Preparando ZIP...' : 'Descargar ZIP'}
                         </button>
                     </>
                 )}
 
                 {fontCss && !error && (
                     <div className="bg-slate-800 rounded-lg p-4 border border-slate-700 mt-4">
-                        <div className="flex items-center mb-2 text-slate-300">
-                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 mr-2 text-indigo-400">
-                                <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5" />
-                            </svg>
-                            <span className="text-sm font-medium">CSS para incluir en tu sitio</span>
+                        <div className="flex items-center justify-between gap-3 mb-2 text-slate-300">
+                            <div className="flex items-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 mr-2 text-indigo-400">
+                                    <path strokeLinecap="round" strokeLinejoin="round" d="M17.25 6.75 22.5 12l-5.25 5.25m-10.5 0L1.5 12l5.25-5.25m7.5-3-4.5 16.5" />
+                                </svg>
+                                <span className="text-sm font-medium">CSS para incluir en tu sitio</span>
+                            </div>
+                            <button
+                                type="button"
+                                onClick={copyCss}
+                                className="px-3 py-1.5 rounded-md text-xs font-medium bg-slate-700 hover:bg-slate-600 text-slate-100 border border-slate-600 transition-colors whitespace-nowrap"
+                            >
+                                {cssCopied ? 'Copiado' : 'Copiar CSS'}
+                            </button>
                         </div>
                         <pre className="text-sm text-slate-300 font-mono whitespace-pre-wrap bg-slate-900 p-3 rounded-md overflow-x-auto border border-slate-700">{fontCss}</pre>
                     </div>

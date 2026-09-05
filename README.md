@@ -87,8 +87,8 @@ En Windows, si la instalación de `sharp` falla, asegúrate de tener las depende
 1. Ve a la página de fuentes (`/fonts`).
 2. Ingresa el nombre exacto de la fuente de Google Fonts que deseas optimizar.
 3. Selecciona los grosores (weights) que necesites.
-4. Haz clic en "Optimizar y Descargar".
-5. Descarga los archivos de fuente en los distintos formatos y copia el CSS generado.
+4. Haz clic en "Optimizar".
+5. Descarga un formato concreto o el ZIP. El CSS se copia al portapapeles con el botón "Copiar CSS".
 
 ## Endpoints
 
