@@ -19,6 +19,10 @@ export const metadata: Metadata = {
   title: "Squeeze - Optimizador de recursos web",
   description: "Optimiza tus imágenes y fuentes para la web mejorando el rendimiento de tu sitio web",
   metadataBase: new URL(process.env.NEXT_PUBLIC_SITE_URL || "http://localhost:3000"),
+  icons: {
+    icon: [{ url: "/logo.svg", type: "image/svg+xml" }],
+    apple: "/logo.svg",
+  },
   openGraph: {
     title: "Squeeze",
     description: "Optimiza imágenes y fuentes para la web",
