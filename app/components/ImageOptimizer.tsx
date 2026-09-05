@@ -316,12 +316,6 @@ const ImageOptimizer: React.FC = () => {
                     Sube una o hasta 100 imagenes de golpe, selecciona calidad y descarga
                     todas optimizadas en WebP y AVIF para mejorar el rendimiento de tu sitio.
                 </p>
-                {/* <div className="mt-4 inline-flex items-center text-sm px-3 py-1.5 rounded-full bg-slate-800 text-slate-300 border border-slate-700">
-                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 mr-1.5 text-indigo-400">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75 11.25 15 15 9.75M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0Z" />
-                    </svg>
-                    Tu privacidad es importante: todas las imágenes se procesan localmente
-                </div> */}
             </div>
 
             {/* Área de arrastrar y soltar */}
