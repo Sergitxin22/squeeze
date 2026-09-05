@@ -1,26 +1,52 @@
-import { NextRequest } from 'next/server';
+import { NextRequest, NextResponse } from 'next/server';
 import path from 'path';
 import os from 'os';
 import fs from 'fs';
 import { downloadGoogleFont } from '../../../utils/fontOptimizer';
+import {
+    checkRateLimit,
+    parseFontFamily,
+    parseFontWeights,
+} from '../../../utils/apiGuards';
+
+export const runtime = 'nodejs';
 
 export async function POST(request: NextRequest) {
-    try {
-        const body = await request.json();
-        const { family, weights = [400] } = body;
+    const limited = checkRateLimit(request, 'optimize-font', 'RATE_LIMIT_FONT_PER_MIN');
+    if (limited) {
+        return limited;
+    }
 
-        const tempDir = path.join(os.tmpdir(), `font-opt-${Date.now()}`);
+    let body: unknown;
+    try {
+        body = await request.json();
+    } catch {
+        return NextResponse.json({ error: 'JSON no valido' }, { status: 400 });
+    }
+
+    const family = parseFontFamily((body as { family?: unknown })?.family);
+    const weights = parseFontWeights((body as { weights?: unknown })?.weights);
+
+    if (!family) {
+        return NextResponse.json({ error: 'Nombre de fuente no valido' }, { status: 400 });
+    }
+
+    if (weights.length === 0) {
+        return NextResponse.json({ error: 'Selecciona al menos un grosor valido' }, { status: 400 });
+    }
+
+    const tempDir = path.join(os.tmpdir(), `font-opt-${Date.now()}-${crypto.randomUUID()}`);
+
+    try {
         fs.mkdirSync(tempDir, { recursive: true });
 
-        console.log(`Descargando fuente: ${family} con pesos: ${weights.join(', ')}`);
         await downloadGoogleFont(family, weights, tempDir);
 
-        // Leer todos los archivos generados
         const filesInDir = fs.readdirSync(tempDir);
-        const files = filesInDir.map(fileName => {
+        const files = filesInDir.map((fileName) => {
             const filePath = path.join(tempDir, fileName);
             const buffer = fs.readFileSync(filePath);
-            const ext = path.extname(fileName).slice(1); // ttf, woff, woff2
+            const ext = path.extname(fileName).slice(1);
             return {
                 name: fileName,
                 type: `font/${ext}`,
@@ -29,32 +55,27 @@ export async function POST(request: NextRequest) {
             };
         });
 
-        // Resumen por tipo
         const filesByType = { ttf: 0, woff: 0, woff2: 0 };
-        for (const f of files) {
-            const ext = path.extname(f.name).slice(1) as 'ttf' | 'woff' | 'woff2';
+        for (const file of files) {
+            const ext = path.extname(file.name).slice(1) as 'ttf' | 'woff' | 'woff2';
             if (filesByType[ext] !== undefined) filesByType[ext]++;
         }
 
-        // CSS con formato mejorado
         const formatMap: { [key: string]: string } = {
-            'ttf': 'truetype',
-            'woff': 'woff',
-            'woff2': 'woff2'
+            ttf: 'truetype',
+            woff: 'woff',
+            woff2: 'woff2',
         };
 
         const cssBlocks: string[] = [];
-
-        // Agrupar archivos por peso (y opcionalmente estilo, asumiendo 'normal' acá)
         const filesByWeightAndStyle: { [key: string]: typeof files } = {};
-        for (const f of files) {
-            // f.name es como inter-normal-400.woff2
-            const parts = f.name.replace(/\.[^/.]+$/, "").split('-');
+        for (const file of files) {
+            const parts = file.name.replace(/\.[^/.]+$/, '').split('-');
             const weight = parts.pop() || '400';
             const style = parts.pop() || 'normal';
             const key = `${style}-${weight}`;
             if (!filesByWeightAndStyle[key]) filesByWeightAndStyle[key] = [];
-            filesByWeightAndStyle[key].push(f);
+            filesByWeightAndStyle[key].push(file);
         }
 
         for (const key of Object.keys(filesByWeightAndStyle)) {
@@ -64,7 +85,7 @@ export async function POST(request: NextRequest) {
             groupFiles.sort((a, b) => {
                 const extA = path.extname(a.name).slice(1);
                 const extB = path.extname(b.name).slice(1);
-                const order = { 'woff2': 1, 'woff': 2, 'ttf': 3 };
+                const order = { woff2: 1, woff: 2, ttf: 3 };
                 return (order[extA as keyof typeof order] || 3) - (order[extB as keyof typeof order] || 3);
             });
 
@@ -81,55 +102,44 @@ export async function POST(request: NextRequest) {
             };
             const weightName = weightNames[weight] || 'Regular';
 
-            const localName1 = family;
-            const localName2 = `${family} ${weightName}`;
-            const localName3 = `${family.replace(/\s+/g, '')}-${weightName}`;
-
             const srcLines = [
-                `local("${localName1}")`,
-                `local("${localName2}")`,
-                `local("${localName3}")`,
-                ...groupFiles.map(f => {
-                    const ext = path.extname(f.name).slice(1);
+                `local("${family}")`,
+                `local("${family} ${weightName}")`,
+                `local("${family.replace(/\s+/g, '')}-${weightName}")`,
+                ...groupFiles.map((file) => {
+                    const ext = path.extname(file.name).slice(1);
                     const format = formatMap[ext] || ext;
-                    return `url("./${f.name}") format("${format}")`;
-                })
+                    return `url("./${file.name}") format("${format}")`;
+                }),
             ];
 
-            const block = `@font-face {
+            cssBlocks.push(`@font-face {
     font-family: "${family}";
     src: ${srcLines.join(',\n        ')};
     font-weight: ${weight};
     font-style: ${style};
     font-display: swap;
-}`;
-            cssBlocks.push(block);
+}`);
         }
 
-        const css = cssBlocks.join('\n\n');
-
-        // Eliminar directorio temporal
-        fs.rmSync(tempDir, { recursive: true, force: true });
-        console.log(`Directorio temporal eliminado: ${tempDir}`);
-
-        return new Response(JSON.stringify({
+        return NextResponse.json({
             files,
-            css,
+            css: cssBlocks.join('\n\n'),
             summary: {
                 ttf: filesByType.ttf,
                 woff: filesByType.woff,
                 woff2: filesByType.woff2,
-                total: files.length
-            }
-        }), {
-            status: 200,
-            headers: { 'Content-Type': 'application/json' },
+                total: files.length,
+            },
         });
-    } catch (err: any) {
-        console.error('Error en la optimización de fuentes:', err);
-        return new Response(JSON.stringify({ error: err.message, stack: err.stack }), {
-            status: 500,
-            headers: { 'Content-Type': 'application/json' },
-        });
+    } catch (err) {
+        console.error('Error en la optimizacion de fuentes:', err);
+        const message = err instanceof Error ? err.message : 'Error al optimizar la fuente';
+        const userMessage = message.includes('not found') || message.includes('not available')
+            ? message
+            : 'Error al optimizar la fuente';
+        return NextResponse.json({ error: userMessage }, { status: 500 });
+    } finally {
+        fs.rmSync(tempDir, { recursive: true, force: true });
     }
 }

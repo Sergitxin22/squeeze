@@ -4,6 +4,7 @@ import React, { useState, useEffect } from 'react';
 import Dropzone from './Dropzone';
 import OptimizationControls from './OptimizationControls';
 import ImageComparison from './ImageComparison';
+import { MAX_BATCH_BYTES, MAX_FILE_SIZE_BYTES } from '../../utils/apiGuards';
 
 type BatchSummary = {
     totalCount: number;
@@ -152,6 +153,11 @@ const ImageOptimizer: React.FC = () => {
 
         const selectedFile = selectedFiles[0];
 
+        if (MAX_FILE_SIZE_BYTES && selectedFile.size > MAX_FILE_SIZE_BYTES) {
+            alert(`La imagen supera el tamano maximo de ${process.env.NEXT_PUBLIC_MAX_FILE_SIZE_MB} MB.`);
+            return;
+        }
+
         setIsProcessing(true);
 
         // Limpiar todas las imágenes optimizadas anteriores antes de procesar
@@ -238,6 +244,14 @@ const ImageOptimizer: React.FC = () => {
 
     const handleOptimizeBatch = async () => {
         if (!selectedFiles.length) return;
+
+        const totalBytes = selectedFiles.reduce((sum, file) => sum + file.size, 0);
+        const overFileLimit = Boolean(MAX_FILE_SIZE_BYTES && selectedFiles.some((file) => file.size > MAX_FILE_SIZE_BYTES));
+        const overBatchLimit = Boolean(MAX_BATCH_BYTES && totalBytes > MAX_BATCH_BYTES);
+        if (overFileLimit || overBatchLimit) {
+            alert('El lote supera los limites configurados de tamano.');
+            return;
+        }
 
         setIsProcessing(true);
         setBatchSummary(null);

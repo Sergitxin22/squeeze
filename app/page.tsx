@@ -1,9 +1,5 @@
 'use client';
 
-import dynamic from "next/dynamic";
-import Image from "next/image";
-
-// Importamos los componentes
 import ImageOptimizer from './components/ImageOptimizer';
 import Header from './components/Header';
 

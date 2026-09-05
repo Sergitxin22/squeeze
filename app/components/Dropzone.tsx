@@ -4,6 +4,7 @@ import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { PhotoIcon } from '@heroicons/react/24/outline';
 import Image from 'next/image';
+import { MAX_FILE_SIZE_BYTES, MAX_FILES } from '../../utils/apiGuards';
 
 interface DropzoneProps {
     onImagesSelected: (files: File[]) => void;
@@ -29,9 +30,14 @@ const Dropzone: React.FC<DropzoneProps> = ({ onImagesSelected }) => {
     const { getRootProps, getInputProps, isDragActive } = useDropzone({
         onDrop,
         accept: {
-            'image/*': ['.png', '.jpg', '.jpeg', '.gif', '.webp']
+            'image/jpeg': ['.jpg', '.jpeg'],
+            'image/png': ['.png'],
+            'image/gif': ['.gif'],
+            'image/webp': ['.webp'],
+            'image/avif': ['.avif'],
         },
-        maxFiles: 100,
+        maxFiles: MAX_FILES,
+        ...(MAX_FILE_SIZE_BYTES ? { maxSize: MAX_FILE_SIZE_BYTES } : {}),
         multiple: true
     });
 
@@ -64,6 +70,7 @@ const Dropzone: React.FC<DropzoneProps> = ({ onImagesSelected }) => {
                                         src={previewUrl}
                                         alt={`Vista previa ${index + 1}`}
                                         fill
+                                        unoptimized
                                         style={{ objectFit: 'cover' }}
                                     />
                                 </div>
@@ -85,7 +92,10 @@ const Dropzone: React.FC<DropzoneProps> = ({ onImagesSelected }) => {
                                 ? 'Suelta las imagenes aqui'
                                 : 'Arrastra y suelta imagenes, o haz clic para seleccionar'}
                         </p>
-                        <p className="mt-1 text-xs text-slate-500">PNG, JPG, JPEG, GIF, WEBP. Hasta 100 archivos por lote.</p>
+                        <p className="mt-1 text-xs text-slate-500">
+                            PNG, JPG, JPEG, GIF, WEBP, AVIF. Hasta {MAX_FILES} archivos por lote
+                            {MAX_FILE_SIZE_BYTES ? ` y ${process.env.NEXT_PUBLIC_MAX_FILE_SIZE_MB} MB por archivo` : ''}.
+                        </p>
 
                         {/* <div className="mt-4 p-2 rounded-lg bg-slate-800/80 inline-flex items-center text-xs text-slate-400">
                             <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor" className="w-4 h-4 mr-1 text-indigo-400">
